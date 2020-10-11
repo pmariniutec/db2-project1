@@ -3,13 +3,13 @@
 
 #include <iostream>
 
-constexpr std::size_t B = 10;
+constexpr std::size_t BUCKET_SIZE = 10;
 
 struct Bucket {
   int next;
   int size;
-  char* key[B];
-  long pos[B];
+  char* key[BUCKET_SIZE];
+  long pos[BUCKET_SIZE];
 };
 
 template<typename RecordType>
