@@ -1,15 +1,27 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
-project(dbms VERSION 1.0 LANGUAGES CXX)
+project(dbms_project VERSION 1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+set(CUSTOM_GCC_FLAGS "-g -Wall -Wpedantic")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CUSTOM_GCC_FLAGS}")
+
+set(EXEC_NAME dbms)
 set(SRC_DIR "src/")
 
 file(GLOB_RECURSE HEADER_SRC CONFIGURE_DEPENDS "${SRC_DIR}/*.h")
 file(GLOB_RECURSE SOURCE_SRC CONFIGURE_DEPENDS "${SRC_DIR}/*.cpp")
 
-add_executable(dbms ${HEADER_SRC} ${SOURCE_SRC})
-set_target_properties(dbms PROPERTIES CXX_STANDARD 17)
-target_include_directories(dbms PUBLIC ${SRC_DIR})
+find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
+
+add_executable(${EXEC_NAME} ${HEADER_SRC} ${SOURCE_SRC})
+set_target_properties(${EXEC_NAME} PROPERTIES CXX_STANDARD 17)
+target_include_directories(${EXEC_NAME} PUBLIC ${SRC_DIR})
+target_link_libraries(${EXEC_NAME} Qt5::Core Qt5::Widgets)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${PROJECT_SOURCE_DIR}/data ${PROJECT_BINARY_DIR}/data RESULT_VARIABLE exitcode)
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${PROJECT_SOURCE_DIR}/indices ${PROJECT_BINARY_DIR}/indices RESULT_VARIABLE exitcode)

@@ -1,12 +1,20 @@
 #include <iostream>
+#include <iterator>
+#include "mock_record.h"
 #include "dynamic_hashing.h"
-#include "record.h"
-
-// TODO: move to own file.
-struct CustomRecord : public Record {
-
-};
+#include "csv_parser.h"
 
 int main() {
-  ExtendibleHashing<CustomRecord> dynamicFile("dynamic", 8);
+  ExtendibleHashing<MockRecord> extendibleHashing("extendible", 8);
+
+  std::ifstream file("data/mock_data.csv");
+
+  MockRecord test;
+
+  for (CSVIterator rowIter{ file, true }; rowIter != CSVIterator{}; ++rowIter) {
+	extendibleHashing.insert({ *rowIter });
+	test = MockRecord(*rowIter);
+  }
+
+  extendibleHashing.search(test);
 }

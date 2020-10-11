@@ -59,15 +59,15 @@ class ExtendibleHashing : public FileOrganization<RecordType> {
 	std::map<int, IndexInfo> m_index;
 	int m_depth;
 	int m_binaryDepth;
-	int m_maxBucketSize = B;
+	int m_maxBucketSize = BUCKET_SIZE;
 	int m_currentTopFileIndex;
 };
 
 template<typename RecordType>
 ExtendibleHashing<RecordType>::ExtendibleHashing(std::string name, int d) : m_fileName{ name }, m_depth{ d } {
-  m_indexName = "dynamicHash/" + m_fileName + "_ind";
+  m_indexName = "indices/extendible_hash/" + m_fileName + "_ind";
   m_binaryDepth = getBinaryDepth();
-  m_maxBucketSize = B;
+  m_maxBucketSize = BUCKET_SIZE;
   initIndex();
   readIndex();
 }
@@ -134,7 +134,7 @@ void ExtendibleHashing<RecordType>::search(RecordType record) {
 	}
   } else {
 	Bucket bucket;
-	auto indexFileName = m_indexName + m_index[current].name;
+	auto indexFileName = m_indexName + m_index[current].m_name;
 	std::ifstream file(indexFileName, std::ios::binary);
 	file.read((char*)&bucket, sizeof(bucket));
 	file.close();
@@ -155,6 +155,7 @@ void ExtendibleHashing<RecordType>::insert(RecordType record) {
   auto key = record.getKey();
   int current = hashInt(key);
   auto indexPtr = m_index[current];
+
   if (indexPtr.m_localDepth == m_binaryDepth) {
 	insertLinked(record);
   } else {
@@ -164,9 +165,7 @@ void ExtendibleHashing<RecordType>::insert(RecordType record) {
 	file.close();
 	auto currentName = m_index[current].m_name;
 	auto currentFileBucket = m_indexName + currentName;
-	std::cout << currentFileBucket << '\n';
 
-	int next;
 	std::string nextFileBucket;
 	int bucketSize;
 
@@ -178,17 +177,11 @@ void ExtendibleHashing<RecordType>::insert(RecordType record) {
 	inFile.read((char*)&bucket, sizeof(bucket));
 	inFile.close();
 
-	next = bucket.next;
 	bucketSize = bucket.size;
-	int counter = 0;
-
-	std::cout << bucketSize << '\n';
-	std::cout << m_maxBucketSize << '\n';
 
 	if (bucketSize == m_maxBucketSize) {
 	  for (auto& [ first, second ] : m_index) {
 		if (second.m_name == currentName) {
-		  auto newBucketIndex = first;
 		  second.m_localDepth++;
 		  second.setName();
 		}
@@ -198,7 +191,7 @@ void ExtendibleHashing<RecordType>::insert(RecordType record) {
 		auto reassignPos = bucket.pos[i];
 		auto current = hashInt(reassignKey);
 
-		auto reassign = m_index[current].name;
+		auto reassign = m_index[current].m_name;
 		auto reassignIndex = m_indexName + reassign;
 		Bucket obj;
 		obj.size = 0;
@@ -314,7 +307,7 @@ void ExtendibleHashing<RecordType>::writeIndex() {
 	file.write((char*)&first, sizeof(first));
 	file.write((char*)&second, sizeof(second));
   }
-  std::ifstream metadata("dynamicHash/hashMetadata", std::ios::binary | std::ios::trunc);
+  std::ifstream metadata("indices/extendible_hash/metadata", std::ios::binary | std::ios::trunc);
   metadata.read((char*)&m_currentTopFileIndex, sizeof(m_currentTopFileIndex));
 }
 
@@ -328,7 +321,7 @@ void ExtendibleHashing<RecordType>::readIndex() {
 	m_index[key] = value;
   }
   m_currentTopFileIndex = m_depth - 1;
-  std::ifstream metadata("dynamicHash/hashMetadata", std::ios::binary);
+  std::ifstream metadata("indices/extendible_hash/metadata", std::ios::binary);
   metadata.read((char*)&m_currentTopFileIndex, sizeof(m_currentTopFileIndex));
 }
 
