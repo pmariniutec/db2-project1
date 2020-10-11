@@ -19,7 +19,7 @@ class FileOrganization {
 	virtual void writeIndex() = 0;
 	virtual void scan() = 0;
 	virtual void insert(RecordType record) = 0;
-	virtual void search(RecordType record) = 0;
+	virtual RecordType search(RecordType record) = 0;
 };
 
 #endif
