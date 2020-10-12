@@ -15,7 +15,7 @@ class CSVRow {
 	  return m_data.size() - 1;
 	}
 
-	friend std::ostream& operator<<(std::ostream& out, const CSVRow& row) {
+	inline friend std::ostream& operator<<(std::ostream& out, const CSVRow& row) {
 	  out << row.m_line << '\n';
 	  return out;
 	}
@@ -40,10 +40,10 @@ class CSVRow {
 	std::vector<int> m_data;
 };
 
-std::istream& operator>>(std::istream& str, CSVRow& data) {
+inline std::istream& operator>>(std::istream& str, CSVRow& data) {
   data.readNextRow(str);
   return str;
-}   
+}
 
 class CSVIterator {
   public:

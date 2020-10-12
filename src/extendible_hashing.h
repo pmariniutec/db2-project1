@@ -1,5 +1,7 @@
 #include "file_organization.h"
+#include "mock_record.h"
 
+#include <stdexcept>
 #include <string>
 #include <map>
 #include <fstream>
@@ -19,7 +21,7 @@ struct IndexInfo {
 
   void setFullName(int n, int d) {
 	m_fullName = "0";
-	for (int i = 0; i < d; ++i) {
+	for (int i = 1; i < d; ++i) {
 	  m_fullName = m_fullName + "0";
 	}
 	for (int i = 0; n > 0; ++i) {
@@ -28,7 +30,7 @@ struct IndexInfo {
 	  else
 		m_fullName[d - 1 - i] = '1';
 
-	  n /= 2;
+	  n = n / 2;
 	}
   }
 
@@ -40,12 +42,13 @@ class ExtendibleHashing : public FileOrganization<RecordType> {
 	ExtendibleHashing(std::string name, int d);
 	~ExtendibleHashing();
 
-	void search(RecordType record) override;
+	RecordType search(char* key) override;
 	void insert(RecordType record) override;
+	bool remove(char* key) override;
 
 	void readIndex() override;
 	void writeIndex() override;
-	void scan() override;
+	std::vector<RecordType> scan() override;
 
 	int hashInt(char* key);
 	void initIndex();
@@ -97,8 +100,7 @@ void ExtendibleHashing<RecordType>::initIndex() {
 }
 
 template<typename RecordType>
-void ExtendibleHashing<RecordType>::search(RecordType record) {
-  auto key = record.getKey();
+RecordType ExtendibleHashing<RecordType>::search(char* key) {
   auto current = hashInt(key);
 
   if (m_index[current].m_localDepth == m_binaryDepth) {
@@ -115,7 +117,7 @@ void ExtendibleHashing<RecordType>::search(RecordType record) {
 	  for (int i = 0; i < n; ++i) {
 		if (bucket.key[i] == key) {
 		  std::cout << "Pos: " << bucket.pos[i] << '\n';
-		  return;
+		  return { };
 		}
 	  }
 	  indexFileName = m_indexName + std::to_string(next);
@@ -129,7 +131,7 @@ void ExtendibleHashing<RecordType>::search(RecordType record) {
 	for (int i = 0; i < n; ++i) {
 	  if (bucket.key[i] == key) {
 		std::cout << "Pos: " << bucket.pos[i] << '\n';
-		return;
+		return { };
 	  }
 	}
   } else {
@@ -142,12 +144,12 @@ void ExtendibleHashing<RecordType>::search(RecordType record) {
 	for (int i = 0; i < n; ++i) {
 	  if (bucket.key[i] == key) {
 		std::cout << "Pos: " << bucket.pos[i] << '\n';
-		return;
+		return { };
 	  }
 	}
   }
 
-  std::cout << "[ERROR] Key not found\n";
+  throw std::runtime_error("[ERROR] Key not found");
 }
 
 template<typename RecordType>
@@ -161,7 +163,7 @@ void ExtendibleHashing<RecordType>::insert(RecordType record) {
   } else {
 	std::ofstream file(m_fileName, std::ios::binary | std::ios::app);
 	file.write((char*)&record, sizeof(record));
-	auto pos = file.tellp();
+	long pos = file.tellp();
 	file.close();
 	auto currentName = m_index[current].m_name;
 	auto currentFileBucket = m_indexName + currentName;
@@ -187,9 +189,9 @@ void ExtendibleHashing<RecordType>::insert(RecordType record) {
 		}
 	  }
 	  for (int i = 0; i < bucketSize; ++i) {
-		auto reassignKey = bucket.key[i];
-		auto reassignPos = bucket.pos[i];
-		auto current = hashInt(reassignKey);
+		char* reassignKey = bucket.key[i];
+		long reassignPos = bucket.pos[i];
+		int current = hashInt(reassignKey);
 
 		auto reassign = m_index[current].m_name;
 		auto reassignIndex = m_indexName + reassign;
@@ -210,7 +212,8 @@ void ExtendibleHashing<RecordType>::insert(RecordType record) {
 		insert(record);
 	  }
 	} else {
-	  std::ofstream outFile(currentFileBucket, std::ios::out | std::ios::trunc);
+	  std::ofstream outFile;
+	  outFile.open(currentFileBucket, std::ios::out | std::ios::trunc);
 	  auto size = ++bucket.size;
 	  bucket.key[size - 1] = key;
 	  bucket.pos[size - 1] = pos;
@@ -301,14 +304,22 @@ void ExtendibleHashing<RecordType>::insertLinked(RecordType record) {
 }
 
 template<typename RecordType>
+bool ExtendibleHashing<RecordType>::remove(char* key) {
+  return true;
+}
+
+
+template<typename RecordType>
 void ExtendibleHashing<RecordType>::writeIndex() {
   std::ofstream file(m_indexName, std::ios::binary);
   for (auto& [ first, second ] : m_index) {
 	file.write((char*)&first, sizeof(first));
 	file.write((char*)&second, sizeof(second));
   }
-  std::ifstream metadata("indices/extendible_hash/metadata", std::ios::binary | std::ios::trunc);
-  metadata.read((char*)&m_currentTopFileIndex, sizeof(m_currentTopFileIndex));
+  file.close();
+  std::ofstream metadata("indices/extendible_hash/metadata", std::ios::binary | std::ios::trunc);
+  metadata.write((char*)&m_currentTopFileIndex, sizeof(m_currentTopFileIndex));
+  metadata.close();
 }
 
 template<typename RecordType>
@@ -320,18 +331,24 @@ void ExtendibleHashing<RecordType>::readIndex() {
 	file.read((char*)&value, sizeof(value));
 	m_index[key] = value;
   }
+  file.close();
   m_currentTopFileIndex = m_depth - 1;
   std::ifstream metadata("indices/extendible_hash/metadata", std::ios::binary);
   metadata.read((char*)&m_currentTopFileIndex, sizeof(m_currentTopFileIndex));
+  metadata.close();
 }
 
 template<typename RecordType>
-void ExtendibleHashing<RecordType>::scan() {
+std::vector<RecordType> ExtendibleHashing<RecordType>::scan() {
+  std::vector<RecordType> records;
   std::ifstream file(m_fileName, std::ios::binary);
+
   RecordType record;
   while (file.read((char*)&record, sizeof(record))) {
-	record.showData();
+	records.push_back(record);
   }
+
+  return records;
 }
 
 template<typename RecordType>
