@@ -30,13 +30,13 @@ class IndexedSequentialAccess : public FileOrganization<RecordType> {
 
 template<typename RecordType>
 IndexedSequentialAccess<RecordType>::~IndexedSequentialAccess() {
-	compressFile(); //not necesary
 	writeIndex();
 }
 
 template<typename RecordType>
 IndexedSequentialAccess<RecordType>::IndexedSequentialAccess(std::string fileName) : m_fileName{fileName}{
-
+	m_indexName = "indexed_sequential_access/" + m_fileName;
+	std::fstream(m_indexName, std::ios::binary);
 }
 
 template<typename RecordType>
@@ -76,6 +76,7 @@ void IndexedSequentialAccess<RecordType>::compressFile() {
 			new_value++;
 		}
 	}
+	REPEATED = 0;
 }
 
 template<typename RecordType>
@@ -105,12 +106,12 @@ void IndexedSequentialAccess<RecordType>::insert(RecordType record) {
 	
 	auto key = record.getKey();
 
-	auto item = m_index.find(key);
-	if (item != m_index.end()) {
-		item -> second = m_index.size() + REPEATED;
+	auto index_record = m_index.find(std::stoi(key));
+	if (index_record != m_index.end()) {
+		index_record -> second = m_index.size() + REPEATED;
 		REPEATED++;
 	}else {
-		m_index.insert(std::pair<int, int>(key,m_index.size() + REPEATED));
+		m_index.insert(std::pair<int, int>(std::stoi(key), m_index.size() + REPEATED));
 	}
 }
 
@@ -118,13 +119,14 @@ template<typename RecordType>
 RecordType IndexedSequentialAccess<RecordType>::search(char* key) {
 	auto index_record = m_index.find(std::stoi(key));
 	RecordType file_record;
+
 	if (index_record != m_index.end()) {
 		std::ifstream file(m_fileName, std::ios::binary);
 		file.seekg(index_record->second * sizeof(RecordType));
 		file.read((char*) &file_record, sizeof(file_record));
 		return file_record;
-	}else {
-		return;
+	}else{
+		throw std::invalid_argument( "Key value is not found" );
 	}
 }
 
@@ -136,5 +138,6 @@ bool IndexedSequentialAccess<RecordType>::remove(char* key) {
 		return true;
 	}else {
 		return false;
+	}
 }
 
