@@ -34,8 +34,24 @@ int main(int argc, char* argv[]) {
   t2.join();
   */
 
+  auto start = std::chrono::high_resolution_clock::now();
+
+  auto fileOrganization = new ExtendibleHashing<MockRecord>("extendible_hashing", 8);
+  std::ifstream file("data/mock_data.csv");
+  for (CSVIterator rowIter{ file, true }; rowIter != CSVIterator{}; ++rowIter) {
+	fileOrganization->insert({ *rowIter });
+  }
+
+  auto end = std::chrono::high_resolution_clock::now();
+
+  auto time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
+
+  std::cout << "Time: " << time << '\n';
+
+  /*
   QApplication app(argc, argv);
   MainWindow mw;
   mw.show();
   return app.exec();
+  */
 }

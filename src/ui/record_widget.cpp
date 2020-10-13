@@ -20,31 +20,27 @@ void RecordWidget::showAddEntryDialog() {
 }
 
 void RecordWidget::addEntry(const QString& id, const QString& firstName, const QString& lastName, const QString& email, const QString& gender, const QString& ipAddress) {
-  if (!table->getRecords().contains({ id.toStdString(), firstName.toStdString(), lastName.toStdString(), email.toStdString(), gender.toStdString(), ipAddress.toStdString() })) {
-	table->insertRows(0, 1, QModelIndex());
+  table->insertRows(0, 1, QModelIndex());
 
-	QModelIndex index = table->index(0, 0, QModelIndex());
-	table->setData(index, id, Qt::EditRole);
+  QModelIndex index = table->index(0, 0, QModelIndex());
+  table->setData(index, id, Qt::EditRole);
 
-	index = table->index(0, 1, QModelIndex());
-	table->setData(index, firstName, Qt::EditRole);
+  index = table->index(0, 1, QModelIndex());
+  table->setData(index, firstName, Qt::EditRole);
 
-	index = table->index(0, 2, QModelIndex());
-	table->setData(index, lastName, Qt::EditRole);
+  index = table->index(0, 2, QModelIndex());
+  table->setData(index, lastName, Qt::EditRole);
 
-	index = table->index(0, 3, QModelIndex());
-	table->setData(index, email, Qt::EditRole);
+  index = table->index(0, 3, QModelIndex());
+  table->setData(index, email, Qt::EditRole);
 
-	index = table->index(0, 4, QModelIndex());
-	table->setData(index, gender, Qt::EditRole);
+  index = table->index(0, 4, QModelIndex());
+  table->setData(index, gender, Qt::EditRole);
 
-	index = table->index(0, 5, QModelIndex());
-	table->setData(index, ipAddress, Qt::EditRole);
+  index = table->index(0, 5, QModelIndex());
+  table->setData(index, ipAddress, Qt::EditRole);
 
-	removeTab(indexOf(newRecordTab));
-  } else {
-	QMessageBox::information(this, tr("Duplicate ID"), tr("The id \"%1\" already exists.").arg(id));
-  }
+  removeTab(indexOf(newRecordTab));
 }
 
 void RecordWidget::editEntry() {
