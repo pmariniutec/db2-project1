@@ -24,26 +24,26 @@ AddDialog::AddDialog(QWidget* parent) : QDialog(parent), idText(new QLineEdit),
   gLayout->addWidget(idLabel, 0, 0);
   gLayout->addWidget(idText, 0, 1);
 
-  gLayout->addWidget(firstNameLabel, 1, 0, Qt::AlignLeft | Qt::AlignTop);
+  gLayout->addWidget(firstNameLabel, 1, 0, Qt::AlignLeft);
   gLayout->addWidget(firstNameText, 1, 1, Qt::AlignLeft);
 
-  gLayout->addWidget(lastNameLabel, 1, 0, Qt::AlignLeft | Qt::AlignTop);
-  gLayout->addWidget(lastNameText, 1, 1, Qt::AlignLeft);
+  gLayout->addWidget(lastNameLabel, 2, 0, Qt::AlignLeft);
+  gLayout->addWidget(lastNameText, 2, 1, Qt::AlignLeft);
 
-  gLayout->addWidget(emailLabel, 1, 0, Qt::AlignLeft | Qt::AlignTop);
-  gLayout->addWidget(emailText, 1, 1, Qt::AlignLeft);
+  gLayout->addWidget(emailLabel, 3, 0, Qt::AlignLeft);
+  gLayout->addWidget(emailText, 3, 1, Qt::AlignLeft);
 
-  gLayout->addWidget(genderLabel, 1, 0, Qt::AlignLeft | Qt::AlignTop);
-  gLayout->addWidget(genderText, 1, 1, Qt::AlignLeft);
+  gLayout->addWidget(genderLabel, 4, 0, Qt::AlignLeft);
+  gLayout->addWidget(genderText, 4, 1, Qt::AlignLeft);
 
-  gLayout->addWidget(ipAddressLabel, 1, 0, Qt::AlignLeft | Qt::AlignTop);
-  gLayout->addWidget(ipAddressText, 1, 1, Qt::AlignLeft);
+  gLayout->addWidget(ipAddressLabel, 5, 0, Qt::AlignLeft);
+  gLayout->addWidget(ipAddressText, 5, 1, Qt::AlignLeft);
 
   auto buttonLayout = new QHBoxLayout;
   buttonLayout->addWidget(okButton);
   buttonLayout->addWidget(cancelButton);
 
-  gLayout->addLayout(buttonLayout, 2, 1, Qt::AlignRight);
+  gLayout->addLayout(buttonLayout, 6, 1, Qt::AlignRight);
 
   auto mainLayout = new QVBoxLayout;
   mainLayout->addLayout(gLayout);

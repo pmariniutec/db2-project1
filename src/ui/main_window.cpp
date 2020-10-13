@@ -10,6 +10,10 @@ MainWindow::MainWindow() : QMainWindow(), recordWidget(new RecordWidget) {
   setWindowTitle(tr("DBMS"));
 
   fileOrganization = new IndexedSequentialAccess<MockRecord>("isam");
+  std::ifstream file("data/mock_data.csv");
+  for (CSVIterator rowIter{ file, true }; rowIter != CSVIterator{}; ++rowIter) {
+	fileOrganization->insert({ *rowIter });
+  }
 }
 
 void MainWindow::createMenus() {
