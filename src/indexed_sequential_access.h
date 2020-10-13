@@ -26,7 +26,21 @@ class IndexedSequentialAccess : public FileOrganization<RecordType> {
 	void compressFile();
 	std::vector<RecordType> scan() override;
 
+	int getReads() {
+	  auto reads = readCount;
+	  readCount = 0;
+	  return reads;
+	}
+
+	int getWrites() {
+	  auto writes = writeCount;
+	  writeCount = 0;
+	  return writes;
+	}
+
   private:
+	int readCount{ 0 };
+	int writeCount{ 0 };
 	std::string m_fileName;
 	std::string m_indexName;
 	std::map<int, int> m_index;
@@ -52,6 +66,7 @@ void IndexedSequentialAccess<RecordType>::readIndex() {
   while (file.read((char*)&key, sizeof(key))) {
 	file.read((char*)&value, sizeof(value));
 	m_index[key] = value;
+	readCount += 2;
   }
 }
 
@@ -74,6 +89,9 @@ void IndexedSequentialAccess<RecordType>::compressFile() {
 	  //insert record to new data file.
 	  outfile.write((char*)&record, sizeof(record));
 
+	  readCount++;
+	  writeCount++;
+
 	  //change index value to new value.
 	  value = newValue;
 	  newValue++;
@@ -91,6 +109,7 @@ void IndexedSequentialAccess<RecordType>::writeIndex() {
 	if (value != -1) {
 	  file.write((char*)&key, sizeof(key));
 	  file.write((char*)&value, sizeof(value));
+	  writeCount += 2;
 	}
   }
 }
@@ -113,6 +132,8 @@ void IndexedSequentialAccess<RecordType>::insert(RecordType record) {
   std::ofstream file(m_fileName, std::ios::binary | std::ios::app);
   file.write((char*)&record, sizeof(record));
 
+  writeCount++;
+
   auto key = record.getKey();
 
   auto index_record = m_index.find(std::stoi(key));
@@ -133,6 +154,7 @@ RecordType IndexedSequentialAccess<RecordType>::search(char* key) {
 	std::ifstream file(m_fileName, std::ios::binary);
 	file.seekg(index_record->second * sizeof(RecordType));
 	file.read((char*)&file_record, sizeof(file_record));
+	readCount++;
 	return file_record;
   } else {
 	throw std::invalid_argument("Key value is not found");
